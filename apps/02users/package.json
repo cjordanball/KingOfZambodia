@@ -1,0 +1,16 @@
+{
+  "name": "02users",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "mocha": "^3.3.0",
+    "mongoose": "^4.9.8",
+    "nodemon": "^1.11.0"
+  }
+}
