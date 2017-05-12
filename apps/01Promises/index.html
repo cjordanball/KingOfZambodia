@@ -1,0 +1,29 @@
+<head>
+</head>
+<body>
+	<button>Click!</button>
+
+	<script>
+	function startGame() {
+		let counter = 0;
+
+		document.querySelector('button').addEventListener('click', () => {
+			++counter;
+		});
+
+	return new Promise((res, rej) => {
+		setTimeout(() => {
+			if (counter > 5) {
+				res(counter);
+			} else {
+				rej('You are a failure');
+			}
+		}, 2000)
+	})
+}
+
+	startGame()
+		.then((prop) => alert(`You win with ${prop} clicks!`))
+		.catch((err) => alert(`You lost: ${err}`));
+	</script>
+</body>
