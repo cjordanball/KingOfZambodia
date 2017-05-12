@@ -75,6 +75,7 @@
 5. In summery at the top is a **mongoDB instance**.  This can contain zero or more **databases**.  A **database** can contain zero or more **collections** (similar to a SQL table).  A **collection** can contain zero or more **documents** (similar to a SQL row).  A **document** can have one or more **fields** (similar to a SQL column).
 
 ## Mongoose
+### Introduction
 1. **Mongoose** is an Object Data Manager that allows Mongo support from Express.  It allows:
 
 	a. validation,
@@ -85,6 +86,7 @@
         
 	d. use of middleware on the model.
 
+### Initial Setup
 2. When we use Mongoose, we must do some initial setup. After installing with npm, we will need to import it into our setup file:
     ```
     const mongoose = require('mongoose');
@@ -106,10 +108,190 @@
             console.warn('Warning:', error);
     });
     ```
+### Models
+1. In the discussion in this section we will use the example of a database that contains a list of **users**, *i.e.*, people using an application.
+
+2. Mongoose is used to create **models**, which represent records in a specific collection. We will create a **user model**, which will represent all the records in our **user collection**.
+
+3. The model will contain an assortment of methods for working with the records in its associated collection. In addition, we will use the model to create single instances, which will be our **documents**.
+
+4. Models have a supeer important property, called the **schema**. The schema defines:
+
+    a. what properties (fields) we expect each record in the collection to have,
     
+    b. what type of data we expect in each field.
+
+5. To get started, we will create our model. We will need to require in mongoose and its Schema property, as follows:
+    ```javascript
+    const mongoose = require('mongoose');
+    const Schema = mongoose.Schema;
+    ```
+6. The Schema is a constructor function, and to create our (very simple) schema, we simply use the *new* keyword, passing in an object containing field names as keys and types as values. For example:
+    ```javascript
+    const UserSchema = new Schema({
+        name: String
+    });
+    ```
+    **Note**: The String type is from the javascript global object. It is just the String object.
+
+7. The schema is important, but only one small part of what is in a mongoose model. So, after creating our schema, we create the **model**, passing in the name of the collection that will be created in Mongo, as well as the schema.  We then assign the returned model to a const:
+    ```javascript
+    const User = mongoose.model('user', UserSchema);
+    ```
+   **Note**: User is a **class**, or **model**, and does not represent any particular user, which will be created as an instance of this class.
+
+8. Finally, don't forget to export the User model so that it can be accessed wherever necessary in our project.
+    ```javascript
+    module.exports = User;
+    ```
+
 ## Basic CRUD Operations
 1. The core of using any database, including Mongo/Mongoose, is the set of four operatinons known as **CRUD**, for **create, **read**, **update**, and **destroy**.
 
+
+## Testing with Mocha
+1. Mocha is a Javascript testing framework, using a "describe/it/expect" pattern. Actually, the **describe** and ""it** are provided by Mocha, but the **expect** gets implemented by an **assertion library**, such as *chai*.
+
+2. Mocha comes packeged with an **asert** library, but it is not installed in global scope with Mocha and must be required in from NodeJS:
+    ```javascript
+    const assert = require('assert');
+
+    describe('Creating records', () => {
+        it('saves a user', () => {
+            assert([some statement returning truthy/falsey]);
+        });
+    });
+    ```
+3. In our **package.json** file, we need to create the **test script**, as follows:
+    ```json
+    "scripts": {
+        "test": "mocha"
+    },
+    ```
+    
+### Automating with Nodemon
+1. Mongoose is not always 100%% compatible with Mocha, and therefore, the *--watch* does not always work to well when added to the Mocha command. Therefore, it is more reliable to use **nodemon** to run our tests whenever we update a file. We do this by updating our script to:
+    ```json
+    "scripts": {
+        "test": "nodemon --exec 'mocha -R min'"
+    }
+    ```
+    The **-R min** are formatting options that removes the description, and just shows that tests passed. 
+
+### First Test - Creating a User
+1. In order to test whether we are able to successfully create a user, we must import the User model into our testing file:
+    ```javascript
+    const User = require('../src/user');
+    
+    describe('Creating records', () => {
+        it('saves a user', () => {
+            const joe = new User({
+                name: 'Joe'
+            })
+        });
+    });
+    ```
+    **Note**: at this point, we have only created a new instance of our user; we **have not** doen anything to save that instance to the database.
+
+2. To save the instance to the database, we use the **save()** method:
+    ```javascript
+    describe('Creating records', () => {
+        it('saves a user', () => {
+            const joe = new User({ name: 'Joe'});
+            
+            joe.save();
+        });
+    ```
+    As we can see from the above, instances of the User class are more than just the key/value pairs we provide them; for example, we know there is, at the least, a **save()** instance method.
+    
+3. The above will save a user to our database collection. However, it will do so every time we call npm run test, so we will keep getting more and more "joes". We are going to want to empty our database after running tests, as we do not want to accumulate all this test data.
+
+4. To accomplish the task of clearing our database before any test is run, we can add a **hook**, a method that is called at a specific time in a cycle. In our *test_helper.js* file, we can add the **beforeEach()** method. We can run as follows:
+    ```javascript
+    beforeEach(() => {
+        mongoose.connection.collections.users.drop();
+    });
+    ```
+    **Note**: We are able to access the users collection, and then use the **drop()** method on it.
+
+5. Remember, every database operation is going to be an async operation, and in order to run our tests, we will need to keep mocha from running out of order. This is taken care of by the **done()** callback that is built-in to mocha.
+
+6. The **drop()** method introduced above takes a callback function as a parameter; in addition, every function that we include in a Mocha beforeEach(), or it(), or describe() method can accept a **done** parameter. Calling **done()** tells Mocha that our operation is complete and we can move on:
+    ```javascript
+    beforeEach((done) => {
+        mongoose.connection.collections.users.drop(() => {
+            done();
+        });
+    });
+    ```
+7. Next, to test whether our record has been saved successfully, we can make use of a property Mongoose adds to every record **if it has been created but not yet saved.** The property, **isNew**, is true if the record has not yet been saved, so, our test can be as follows:
+    ```javascript
+    describe('Creating records', () => {
+        it('saves a user', (done) => {
+            const joe = new User({
+                name: 'Joe'
+            });
+            joe.save()
+                .then(() => {
+                    //Has joe been saved
+                    assert(!joe.isNew);
+                    done();
+                });
+        });
+    });
+    ```
+8. Finally, let's go back to our *test_helper.js* file and examine the connection. In addition to the **beforeEach** hook Mocha also provides a **before()** hook, the callback of which also takes the **done** parameter. The code in the **before()** callback is only run a single time, rather than before every test, so that is where we should include the conection:
+    ```javascript
+    before((done) => {
+        mongoose.connect('mongodb://localhost/users_test');
+        mongoose.connection
+            .once('open', () => {done();})
+            .on('error', (error) => {
+                console.warn('Warning:', error);
+        });
+    });
+    ```
+
+### Second Test - Finding a User
+1. In order to test whether we are retrieving a user correctly, it will be necessary for us to first save one or more users to our database, which otherwise would be empty. So, we will run a **beforeEach** statement in our *describe* block, meaning this action will take place prior to each *it* statement being run:
+    ```javascript
+    describe('Reading users out of database', () => {
+        let joe;
+	
+        beforeEach((done) => {
+            joe = new User({ name: 'Joe'});
+            joe.save()
+                .then(() => done());
+        });
+		
+        it('finds all users with name of Joe', () => {
+		
+        });
+    });
+    ```
+2. There are two primary query methods that we will be using in Mongoose, **find()** and **findOne()**. Both of these are methods of the Class, or collection, to which they belong. Each takes a single object parameter containing the matching criteria. The difference is that **find() returns an array of all matches** and **findOne() returns a single record**.
+
+3. To create a test, let's try finding all the users, then comparing the \_id of the found user with the \_id of the user we created, and see if they are the same. In order for this to work, however, we must take the \_id, which is actually an object, and run **toString()** on it.
+    ```javascript
+    it('finds all users with name of Joe', (done) => {
+        User.find({ name: 'Joe' })
+            .then((users) => {
+                assert(users[0].id.toString() === joe._id.toString());
+                done();
+            });
+    });
+    ```
+4. Finally, we can test the **findOne()** method by searching for a particular \_id. Since we created a user and assigned the record to the variable "joe", we can run the following:
+    ```javascript
+    it('finds a user with a particular id', (done) => {
+        User.findOne({ _id: joe._id })
+             then((user) => {
+                assert(user.name === 'Joe');
+                done();
+            })
+    });
+    ```
+    Note that we do not need to use the *toString()* method when using \_id in the criteria object.
 
 ::: danger
 material below here is not reliable
