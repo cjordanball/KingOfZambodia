@@ -27,51 +27,98 @@
     ```
     which will cause the mongoDB server to run whenever the computer is turned on. 
 
+5. Once the server has been started, we can create a Mongo instance, with the following command
+    ```
+    > mongo  //this will connect to 'test' database
+    ```
+    
+6. To show what databases are available:
+    ```
+    > show dbs
+    ```
+		
+7. To switch to a new database:
+    ```
+    > use [database name]  // need not exist previously
+    ```
+		
+8. To see what collections are in the current database:
+    ```
+    > show collections
+    ```
+	
+9.  To delete a collection:
+    ```
+    > [databaseName].[collectionName].drop()
+    ```
+		
+10. To delete a database:
+    ```
+    > use [otherDatabaseName];
+    > [databaseName].dropDatabase();
+    ```
+		
+11. To see what indexes there are and what fields are included in the index:
+    ```
+    > [databaseName].systems.indexes.find()
+    ```
+
+## Introduction
+1. **Mongo**, or mongoDB, is a database which we use to persist data in our applications. As such, it is contacted by our back-end server, when necessary to obtain information for our client. The server acts as a protection for the data, validating that the client is authorized to make any changes, and validating any input before allowing it to modify our data.
+
+2. We will also be using **Mongoose**, which is an **object relational mapper(ORM)**, which is simply an interface to allow us to work from our Node server to the back end more efficiently.
+
+3. We can create multiple databases within a single Mongo instance. But note that we will normally use just one database in a single application.
+
+4. Inside a database, we have **collections**. A *collection* is the core unit for storing data inside a Mongo database.
+
+5. In summery at the top is a **mongoDB instance**.  This can contain zero or more **databases**.  A **database** can contain zero or more **collections** (similar to a SQL table).  A **collection** can contain zero or more **documents** (similar to a SQL row).  A **document** can have one or more **fields** (similar to a SQL column).
+
+## Mongoose
+1. **Mongoose** is an Object Data Manager that allows Mongo support from Express.  It allows:
+
+	a. validation,
+        
+	b. schemas/models,
+        
+	c. CRUD operations,
+        
+	d. use of middleware on the model.
+
+2. When we use Mongoose, we must do some initial setup. After installing with npm, we will need to import it into our setup file:
+    ```
+    const mongoose = require('mongoose');
+    ```
+
+3. Then, we must run the **mongoose.connect()** method. This takes one parameter, a string identifying where the mongoDB database is located:
+    ```javascript
+        mongoose.connect('mongodb://localhost/[name of database]');
+    ```
+    If we were using a remote Mongo server, we would have the IP address and port instead of *localhost*.
+    
+    **Note**: The database need not pre-exist. Mongoose will create it if it is not yet in existence.
+
+4. Finally, we set up event listeners as follows:
+    ```javascript
+    mongoose.connection
+        .once('open', () => console.log('Good to go!'))
+        .on('error', (error) => {
+            console.warn('Warning:', error);
+    });
+    ```
+    
+## Basic CRUD Operations
+1. The core of using any database, including Mongo/Mongoose, is the set of four operatinons known as **CRUD**, for **create, **read**, **update**, and **destroy**.
+
 
 ::: danger
 material below here is not reliable
 :::
 
-####Mongo Heirarchy
-1.  At the top is a Mongo **instance**.  This can contain zero or more **databases**.  A **database** can contain zero or more **collections** (similar to a SQL table).  A **collection** can contain zero or more **documents** (similar to a SQL row).  A **document** can have one or more **fields** (similar to a SQL column).
-
-2. Cursors: 
-
-####Starting
-
-2.  To start a Mongo instance, use the shell and type:
-
-		> mongo  //this will connect to 'test' database
-		
-####Basic Operations
-
-1.  To show what databases are available:
-
-		> show dbs;
-		
-2.  To switch to a new database:
-
-		> use testDb;  //'testDb' does not have to exist previously
-		
-3.  To see what collections are in the current database:
-
-		> show collections;
-		
-4.  To delete a collection:
-
-		> db.testCollection.drop();
-		
-5.  To delete a database:
-
-		> use oldDb;
-		> db.dropDatabase();
-		
-6. To see what indexes there are and what fields are include in the index:
-
-		> db.systems.indexes.find()
 
 
-####Basic CRUD (and more) Operations
+
+
 
 #####Create
 
@@ -178,12 +225,7 @@ material below here is not reliable
 
 	 
 ###Mongoose
-1.	Mongoose is an Object Data Manager that allows Mongo support from Express.  It allows:
 
-	a. validation,
-	b. schemas/models,
-	c. CRUD operations,
-	d. use of middleware on the model
 	
 2. After setting up Mongoose through NPM, set up the connection to the database in the environment configuration files.  For dev, go to the dev config folder and add to the module.exports object:
 
