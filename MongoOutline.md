@@ -293,6 +293,142 @@
     ```
     Note that we do not need to use the *toString()* method when using \_id in the criteria object.
 
+
+### Third Test - Deleting a User
+1. There are several ways to remove a document from a collection. Three exist as static methods for the Class, and one is an instance method for the document. Assuming we want to remove "joe", which is an instance of User, we could have:
+
+    a. **User.remove()**: Takes a matcher object, and removes all matching entries.
+    
+    b. **User.findOneAndRemove()**: Takes a matcher object, and removes the first matching entry.
+    
+    c. **User.findByIdAndRemove()**: Takes an \_id as a parameter.
+    
+    d. **joe.remove()**: No parameters required, very useful when we have a direct reference to the object we want to remove.
+
+2. The following illustrates each of the four methods:
+    ```javascript
+    const assert = require('assert');
+    const User = require('../src/user');
+
+    describe('Deleting a user', () => {
+        let joe;
+        beforeEach((done) => {
+            joe = new User({ name: 'Joe' });
+            joe.save()
+                .then(() => done());
+            });
+
+        it('model instance remove', (done) => {
+            joe.remove()
+                .then(() => User.findOne({ name: 'Joe' }))
+                .then(user => {
+                    assert(user === null);
+                    done();
+                });
+        });
+
+        it('class method remove', (done) => {
+            User.remove({ name: 'Joe' })
+                .then(() => User.findOne({ name: 'Joe' }))
+                .then(user => {
+                    assert(user === null);
+                    done();
+                });
+        });
+        
+        it('class method findOneAndRemove', (done) => {
+            User.findOneAndRemove({ name: 'Joe' })
+                .then(() => User.findOne({ name: 'Joe' }))
+                .then(user => {
+                    assert(user === null);
+                    done();
+                });
+        });
+
+        it('class method findByIdAndRemove', (done) => {
+            User.findByIdAndRemove(joe._id)
+                .then(() => User.findOne({ name: 'Joe' }))
+                .then(user => {
+                    assert(user === null);
+                    done();
+                })
+        });
+    });
+    ```
+### Fourth Test - Updating a User
+1. There are also several ways to update a document from a collection. Three exist as static methods for the Class, and two as an instance method for the document. Assuming we want to update "joe", which is an instance of User, we could have:
+
+    a. **User.update()**: Takes a matcher object, and removes all matching entries. In basic form it takes a selector object as a first parameter, and a  change object as the second parameter.
+    
+    b. **User.findOneAndUpdate()**: Takes a matcher object, and removes the first matching entry.
+    
+    c. **User.findByIdAndUpdate()**: Takes an \_id as a parameter.
+    
+    d. **joe.update()**: Takes a parameter of an object of key/values to update - **cannot add new properties onto the record**.
+    
+    e. **joe.set() and joe.save()**: **Set** is used to change the value of any property **that already exists**. It cannot be used to add a property to our user instance. Then, we must use **save()** to put it in the database.
+
+2. In the following example test page, notice the *assertName* function we create, to prevent having to repeat the testing code in every *it* block.
+    ```javascript
+    const assert = require('assert');
+    const User = require('../src/user');
+
+    describe('Updating a user', () => {
+        let joe;
+        beforeEach((done) => {
+            joe = new User({ name: 'Joe' });
+            joe.save()
+                .then(() => done());
+        });
+
+        function assertName(operation, done) {
+            operation
+                .then(() => User.find({}))
+                .then(users => {
+                    assert(users.length === 1);
+                    assert(users[0].name === 'Sue');
+                    done();
+                })
+        };
+
+        it('instance type using set and save', (done) => {
+            joe.set('name', 'Sue');
+            assertName(joe.save(), done);
+        });
+
+        it('an instance update', (done) => {
+            assertName(joe.update({name: 'Sue'}), done);
+        });
+
+        it('a class update', (done) => {
+            assertName (
+                User.update({ name: 'Joe' }, { name: 'Sue' }),
+                done
+            );
+        });
+
+        it('class method findOneAndUpdate', (done) => {
+            assertName (
+                User.findOneAndUpdate({ name: 'Joe' }, { name: 'Sue' }),
+                done
+            );
+        });
+
+        it('class method findByIdAndUpdate', (done) => {
+            assertName (
+                User.findByIdAndUpdate(joe._id, { name: 'Sue'}),
+                done
+            )
+        });
+    });
+    ```
+
+
+
+
+
+
+
 ::: danger
 material below here is not reliable
 :::
