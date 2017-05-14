@@ -4,7 +4,7 @@ const User = require('../src/user');
 describe('Updating a user', () => {
 	let joe;
 	beforeEach((done) => {
-		joe = new User({ name: 'Joe', postCount: 20 });
+		joe = new User({ name: 'Joe', likes: 0 });
 		joe.save()
 			.then(() => done());
 	});
@@ -17,6 +17,10 @@ describe('Updating a user', () => {
 				assert(users[0].name === 'Sue');
 				done();
 			})
+			.catch((err) => {
+				console.log('ERR: ', err);
+				done();
+			});
 	};
 
 	it('instance type using set and save', (done) => {
@@ -50,10 +54,10 @@ describe('Updating a user', () => {
 	});
 
 	it('A user can have their post-count incremented by 1', (done) => {
-		User.update({ name: 'Joe' }, { $inc: { postCount: 10 } })
+		User.update({ name: 'Joe' }, { $inc: { likes: 10 } })
 			.then(() => User.find({ name: 'Joe' }))
 			.then((users) => {
-				assert(users[0].postCount === 30);
+				assert(users[0].likes === 10);
 				done();
 			});
 	});
