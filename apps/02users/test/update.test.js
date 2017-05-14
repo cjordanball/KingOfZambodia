@@ -4,7 +4,7 @@ const User = require('../src/user');
 describe('Updating a user', () => {
 	let joe;
 	beforeEach((done) => {
-		joe = new User({ name: 'Joe' });
+		joe = new User({ name: 'Joe', postCount: 20 });
 		joe.save()
 			.then(() => done());
 	});
@@ -13,7 +13,6 @@ describe('Updating a user', () => {
 		operation
 			.then(() => User.find({}))
 			.then(users => {
-				console.log(users[0]);
 				assert(users.length === 1);
 				assert(users[0].name === 'Sue');
 				done();
@@ -48,5 +47,14 @@ describe('Updating a user', () => {
 			User.findByIdAndUpdate(joe._id, { name: 'Sue'}),
 			done
 		)
+	});
+
+	it('A user can have their post-count incremented by 1', (done) => {
+		User.update({ name: 'Joe' }, { $inc: { postCount: 10 } })
+			.then(() => User.find({ name: 'Joe' }))
+			.then((users) => {
+				assert(users[0].postCount === 30);
+				done();
+			});
 	});
 });
