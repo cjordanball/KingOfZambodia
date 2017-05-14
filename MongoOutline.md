@@ -423,6 +423,65 @@
     });
     ```
 
+### Update Modifiers
+1. Note that we did not add any properties to our records. We cannot do that unless we add it to the model's **schema**.
+
+2. Imagine we have created another property for each user that takes an integer, and we wish to increase each users count by 1. We could get all the users on our server, iterate through the list and increase the count, then save the data back in the database.  **Such an approach is very inefficient and should be avoided**. Instead, we can instruct the database to find the users, then update the count per our instruction, as follows:
+
+    a. use the Mongo **increment operator ($inc)**, which allows us to increase, or decrease, each selected record by a given amount:
+    ```javascript
+    User.update({ name: 'Joe' }, { $inc: { postCount: 2 } });
+    ```
+    The update command above will find all the records that have a name property of 'Joe', and then will increase the postCount property by 2.
+
+3. There are a variety of such *update operators*, and they are documented in the Mongo documentation, so do not assume we are limited to those discussed herein.
+
+
+## Validation (Mongoose)
+1. Mongoose provides validations features, so that we can confirm that data is in a valid form before sending it off to the database. *Mongo* does have its own support for validation, but that is not covered in this section.
+
+2. The validation will occur in our **Schema** for our collection. In place of the property type, we will include an object with our validation properties. In that object, we must have a *type* property.
+
+3. The most basic validation is to require a field to have a value. That can be accomplished with the key:value pair "required: true". However, the better practice is to make our value an array, with the first element being the **true** requirement and the second element being the error message to display:
+    ```javascript
+    name: {
+        type: String,
+        required: [true, 'Name is required.']
+    },
+    ```
+3. Our record (a class instance) will have a method available to it, **validateSync()**, which will return the result of the validation process. There is also a **validate()** method, which is asynchronous and takes a callback. It would be used, for example, if it is necessary to check with a web service to perform the validation. If no I/O is necessary, then we can use *validateSync().*
+
+4. To get access to the error message if a validation fails, we need to get into the object returned by validateSync(). It can be found at:
+    ```javascript
+    validationResult.errors.[property].message
+    ```
+    **NOTE**: If the entry passes all validation, then validateSync() will return *undefined*.
+
+5. All Schema types have a **required** validator. Numbers have **min** and **max** validators. Strings have **enum**, **match**, **maxlength** and **minlength** validators.
+
+    a. **enum** takes an array of discrete values that are allowed:
+    ```javascript
+    enum: {
+        ['manager', 'professional', 'labor'],
+        message: 'Must be Joe, John, or Jay'
+    )
+    ```
+    b. **match** takes a value of an array, the first element of which is the regular expression to match, and the second element is the error message if there is no match.
+    ```javascript
+    match: [/^jo\w*|sue$/i, 'Name must start with "jo"'],
+    ```
+
+6. Custom validators are constructed using the **validate** property, which should have a property of **validator**, paired with a value of an array, the first element being a function that returns true or false, and the second element being an error message if the function returns false:
+    ```javascript
+    validate: {
+        validator: (name) => name.length > 2,
+            message: 'Name must be longer than 2 chars.'
+    },
+    ```
+
+7. If multiple validators are flunked, the **validateResult.errors** message will be the first one that is tripped upon.
+
+
 
 
 
@@ -745,20 +804,6 @@ material below here is not reliable
 			user.authenticate('password');
 
 
-####Validation
-
-1.  Most basic validation is to require a field to be entered.  That is accomplished with the k:v pair "required: true".
-
-2.  Predefined validators for **strings**:
-
-		//match: takes a string or regex.  For example, for an email:
-		match: /.+\@.+\..+/, 
-		
-		//enum: takes an array of discrete values that are allowed:
-		enum: ['manager', 'professional', 'labor'],
-
-
-3. Custom validators are constructed using the **validate** property, which should have a value of a two element array, the first element being a function that returns true or false, and the second element being an error message if the function returns false.
 
 ####Middleware
 1. Middleware in Mongoose can either be **pre** or **post**.  Pre middleware is executed before the operation with which it is associated, whereas post middleware is executed after.  Compare the two examples:

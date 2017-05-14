@@ -11,6 +11,10 @@ describe('Creating records', () => {
 				//Has joe been saved
 				assert(!joe.isNew);
 				done();
+			})
+			.catch((err) => {
+				console.log('ERR: ', err);
+				done();
 			});
 	});
 });
