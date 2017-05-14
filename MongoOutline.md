@@ -481,13 +481,65 @@
 
 7. If multiple validators are flunked, the **validateResult.errors** message will be the first one that is tripped upon.
 
+## Relational Data (Subdocuments)
+1. Of course, Mongo is a non-SQL database, so we will want to structure the data storage differently. For example, if we have a tabe of users, and users write blog posts, in a SQL database we can create a table of Users, a table of Posts, and reference the author in each post. In a non-SQL database, we might be better having a single users collection, with a posts field in each user. See Diagram 04 for an illustration of how we would structure this.
 
+2. Remember, *models* represent *collections*, *schema* represent *records*.
 
+3. In our example, we are going to embed a list of posts into each user. In the Mongo lexicon, this embedded items are known as **subdocuments**. To embed our schema for posts into our schema for users, we do the following:
 
+    a. create a new file, *postSchema.js*, in which to create and export our schema:
+    ```javascript
+    //postSchema.js
+    const mongoose = require('mongoose');
+    const Schema = mongoose.Schema;
 
+    const PostSchema = new Schema({
+        title: String
+    });
 
+    module.exports = PostSchema;
+    ```
 
+    b. go to our *user.js* file, and inside the UserSchema, insert a new field of *posts*, and give it a value of an array of *PostSchema*, as follows:
+    ```javascript
+    //user.js
+    const UserSchema = new Schema({
+        name: {
+            type: String,
+            required: [true, 'Name is required.'],
+            validate: {
+                validator: (name) => name.length > 2,
+                message: 'Name must be longer than 2 chars.'
+            },
+        },
+	postCount: Number,
+	posts: [PostSchema]
+    });
+    ```
 
+### Adding and Removing Subdocuments
+1. To add a subdocument (in our case, a post to the user), we must first add the subdocument, **and then** call *save()* on the updated document. Otherwise, it is very simple. We use the *push()* Array method to add the subdocument, then do a *save()* operation.
+
+2. In deleting a subdocument, the same rules apply - we use standard javascript to modify our subdocuments array inside our parent document, but must then save the parent docuemnt. **HOWEVER**, Mongoose provides a **remove()** method on the subdocument instance. This **only removes** from the record, it **does not** save the removal, as the *remove()* method does when called on the main record instance.
+
+### Virtual Types
+1. A **virtual type** is any field on a record that is not explicitly persisted into our Mongo database. Instead, it is inferred or calculated from the data.
+
+2. **Example**: If we have a user collection with each user having an array of posts, it is not necessary to have an actual field called "postCount" being saved in our database and being manually updated every time the user adds or removes a post. Instead, we can simply uze the length of the posts array whenever we need the count.
+
+3. In order to use virtual types in mongoose, we use the **get()** method added by ES6. The property **does not** go into our schema definition. After the schema is created, we use the **virtual** method to name the property, and then define our getter function. Below, we are returning the number of posts a user has saved:
+    ```javascript
+    //const UserSchema = new Schema . . .
+    
+    UserSchema.virtual('postCount').get(function() {
+        return this.posts.length;
+    });
+    ```
+    **VERY IMPORTANT**: In order to be able to reference our instance as "this", we have to use a traditional function statement, and not an arrow function, which would take the surrounding scope.
+    
+
+## THE END
 ::: danger
 material below here is not reliable
 :::

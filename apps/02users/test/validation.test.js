@@ -5,7 +5,6 @@ describe('Validating records', () => {
 	function checkValidation(user, testMessage) {
 		const validationResult = user.validateSync();
 		const { message } = validationResult.errors.name;
-		console.log('mess: ', message);
 		assert (message === testMessage);
 	}
 
@@ -41,7 +40,6 @@ describe('Validating records', () => {
 		user.save()
 			.catch((validationResult) => {
 				let { message } = validationResult.errors.name;
-				console.log('val', message);
 				assert( message === 'Name must start with "jo" or be "sue"');
 				done();
 			})
