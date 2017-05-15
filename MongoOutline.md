@@ -85,9 +85,9 @@
 	c. CRUD operations,
         
 	d. use of middleware on the model.
-
+    
 ### Initial Setup
-2. When we use Mongoose, we must do some initial setup. After installing with npm, we will need to import it into our setup file:
+1. When we use Mongoose, we must do some initial setup. After installing with npm, we will need to import it into our setup file:
     ```
     const mongoose = require('mongoose');
     ```
@@ -556,8 +556,64 @@
         }]
     })
     ```
-    The ref is 
-5. 
+    This has some similarities to, *but is not the same as*, the subdocument. It is a reference to another record in anothor model.
+
+5. The **type** in a case like this will always be the *Schema.Types.ObjectId*, because that is what we are working with, is the Id of another object. The **ref** value will be the name that is passed into the *mongoose.model* as the first argument, **not** the name given the model (watch the case).
+
+6. Note that if we can have multiple referenced items associated with the main item, such as above, where a post can have multiple comments, we must put the object **in an array**. If only a single item will exist (such as only one author for each comment), then the object will **not** be inside an array.
+
+7. To set up an association, we do the following (assume we have a user, "joe", a bllog post, "blogPost", and a comment, "comment").
+
+    a. If there are multiple items allowed, push the associated into the main item's array:
+    ```javascript
+    joe.blogPosts.push(blogPost)
+    ```
+    Don't worry - mongoose will automatically insert the ObjectId and not the entire blogPost!
+    
+    b. If it is a one-to-one relationship, then use assignment to make the association:
+    ```javascript
+    comment.user = joe;
+    ```
+    Again, mongoose will, behind-the-scenes, make sure it is joe's id, and not the entire record, that is assigned to comment.user.
+    
+    
+## Query Modification
+1. Examining a typical Mongoose query, it may look like this:
+    ```javascript
+    User.findOne({ name: 'Jordan' }).then( . . . );
+    ```
+    In the above, *User* designates the **collection** to be queried. The query is then formed, but nothing is actually sent off to the database until *then* is executed. In older versions of Mongoose, using callbacks instead of promises, the method **exec()** is used instead of **then**.
+
+3. Mongoose provides the ability to modify the above query, as follows:
+    ```javascript
+    User.findOne({ name: 'Joe' }).modifier.then( . . . );
+    ```
+    There are predefined modifiers provided by Mongoose, and we can also create our own modifiers.
+
+### The Populate Modifier
+1. When we send for a record that contains references to records in another collection, what we get are the **id numbers** of the referenced items. If we want the actual item itself, we can use the **populate** modifier method, as follows:
+    ```javascript
+    User.findOne({ name: Joe }).populate("blogPosts").then( .  . . );
+    ```
+    In the above, the arguments in the *populate* method are the properties that we want to be expanded past the id numbers.    
+
+2. We can also go deeper to populate references inside the references. Mongoose does not allow this to be done automatically, or else it could get out of control. However, let's examine a case where Users write Blogposts, Blogposts have comments, and each comment has an author. As seen in the above example, we can easily access the Blogpost objects rather than merely the id by using populate. To go deeper, see the following exammple:
+    ```javascript
+    User.findOne({ name: 'Joe'})
+    .populate({
+        path: 'blogPosts',
+        populate: {
+            path: 'comments',
+            model: 'comment',
+            populate: {
+                path: 'author',
+                model: 'user'
+            }
+        }
+    })
+    ```
+    In the above example, at each level we can have a populate property, which has a value of an objec with the path (*i.e.*, the property to expand), the model (*i.e.*, the model where this resides) and, if one wishes to go into the next level, a nested *populate* property. 
+    
 
 ## THE END
 ::: danger
@@ -696,11 +752,7 @@ material below here is not reliable
 		
 		var db = mongoose();
 
-####Schema
 
-1. Mongoose allows creation of a **Schema** object to define properties for the document list, to impose some order on the whole mess.
-
-2.  Once a Schema is created, a **Model** constructor function will be defined to create instances of Mongo documents.
 
 #####Creating a Schema
 1. We will have a **models** folder in the app directory.
@@ -824,7 +876,7 @@ material below here is not reliable
 ####Methods		
 		
 5.  Document Methods:
-	a. **save**: saves the document to the database.  Will have a callback with error and the saved object as pararmeters.
+
 	b. **find**: retrieves multiple documents stored in the same collection.  It takes the Mongo query structure, and has four parameters: a mongo query object, fields to return, options, and a callback with error and array of found objects.  The options are many of the cursor methods.  See the following:
 	
 			User.find({}, 'username email', {skip: 1, limit: 3}, function(err, users) {}) 	
@@ -836,7 +888,6 @@ material below here is not reliable
 	
 			User.findOne({name:/molly/i}, 'name, phone', [callback])
 
-	d.	**update()**
 	
 	e.  **findOneAndUpdate** Uses the Mongo findAndModify() command to update a single item.  Takes four arguments i) the query, ii) the update items, iii) options (a. boolean: if true, return document as modified, b. boolean: if true, upsert, c. sort order for choosing one of multiple documents);
 	
@@ -844,11 +895,7 @@ material below here is not reliable
 	
 			User.findByIdAndUpdate(id, {$set: {age: 52}}, function(err, user) {});
 			
-	g. **remove()**
-	
-	h. **findOneAndRemove()**
-	
-	i. **findByIdAndRemove()**	
+		
 	
 ####Custom Model Methods
 

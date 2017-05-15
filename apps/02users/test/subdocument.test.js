@@ -5,7 +5,6 @@ describe('Subdocuments', () => {
 	it('can create a subdocument', (done) => {
 		const joe = new User({
 			name: 'Joe',
-			postCount: 1,
 			posts: [{ title: 'Post a Title' }],
 		});
 		joe.save()
@@ -18,7 +17,6 @@ describe('Subdocuments', () => {
 	it('can add subdocuments to an existing record', (done) => {
 		const joe = new User({
 			name: 'Joe',
-			postCount: 0,
 			posts: [],
 		});
 		joe.save()
@@ -36,7 +34,6 @@ describe('Subdocuments', () => {
 	it('can remove subdocuments of an existing record', (done) => {
 		const joe = new User({
 			name: 'Joe',
-			postCount: 1,
 			posts: [{ title: 'The Winter or Our Discontent' }],
 		});
 		joe.save()
