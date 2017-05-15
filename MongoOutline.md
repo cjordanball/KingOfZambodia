@@ -538,6 +538,26 @@
     ```
     **VERY IMPORTANT**: In order to be able to reference our instance as "this", we have to use a traditional function statement, and not an arrow function, which would take the surrounding scope.
     
+## Relational Data (Multiple Collections)
+1. If we extend the structure we have been discussing above, users who write posts, to also keep track of comments to each post, including who wrote the comments, then our data becomes quite nested and can get difficult to work with generally.
+
+2. For better or worse, Mongo does not allow for techniques such as **joins** to work easily with multiple tables. Trying to copy SQL techniques can lead to trouble pretty quickly.
+
+3. For this section, lets imagine that we have Users who can write posts. In addition, Users can write blogposts, and users can write comments about the blogposts. We will not use subdocuments for this, but will create new models for BlogPosts and Comments.
+
+4. For our BlogPost Schema, we might have something like:
+    ```javascript
+    const BlogPostSchema = new Schema({
+        title: String,
+        content: String,
+        comments: [{
+            type: Schema.Types.ObjectId,
+            ref: 'Comment'
+        }]
+    })
+    ```
+    The ref is 
+5. 
 
 ## THE END
 ::: danger
