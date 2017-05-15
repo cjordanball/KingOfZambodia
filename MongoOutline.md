@@ -132,15 +132,47 @@
         name: String
     });
     ```
-    **Note**: The String type is from the javascript global object. It is just the String object.
+7. As seen above, if there are no other properties, we can simply pass in the **type** as the value for the property. If there are other properties for the field, we will have an object containing a **type** property, as follows:
+    ```javascript
+    lastName: {
+        type: String,
+        default: 'Kim'
+    }
+    ```
+8. The data types for the Schema are as follows:
 
-7. The schema is important, but only one small part of what is in a mongoose model. So, after creating our schema, we create the **model**, passing in the name of the collection that will be created in Mongo, as well as the schema.  We then assign the returned model to a const:
+    a. String
+
+    b. Number
+    
+    c. Date
+    
+    d. Boolean
+    
+    e. ObjectId: must specify as follows:
+    ```javascript
+    var scheme = new Schema({
+        ID: Schema.Types.ObjectId,
+    })
+    ```
+
+    f. Array: This can either be a mixed array, or an array of a specified type. For example:
+    ```javascript
+    var scheme = new Schema({
+        mixArr: [],
+        strArr: [String],
+        numArr: [Number], //etc.
+    });
+    ```
+    **Note**: These types are off the Javascript global object (with the exception of ObjectId).
+
+9. The schema is important, but only one small part of what is in a mongoose model. So, after creating our schema, we create the **model**, passing in the name of the collection that will be created in Mongo, as well as the schema.  We then assign the returned model to a const:
     ```javascript
     const User = mongoose.model('user', UserSchema);
     ```
    **Note**: User is a **class**, or **model**, and does not represent any particular user, which will be created as an instance of this class.
 
-8. Finally, don't forget to export the User model so that it can be accessed wherever necessary in our project.
+10. Finally, don't forget to export the User model so that it can be accessed wherever necessary in our project.
     ```javascript
     module.exports = User;
     ```
@@ -481,6 +513,17 @@
 
 7. If multiple validators are flunked, the **validateResult.errors** message will be the first one that is tripped upon.
 
+### Default Values
+1. One can set default values in the Mongoose Schema. Example:
+    ```javascript
+    const UserSchema = new Schema({
+        . . . 
+        created: {
+            type: Date,
+            default: Date.now()
+        }
+    )
+
 ## Relational Data (Subdocuments)
 1. Of course, Mongo is a non-SQL database, so we will want to structure the data storage differently. For example, if we have a tabe of users, and users write blog posts, in a SQL database we can create a table of Users, a table of Posts, and reference the author in each post. In a non-SQL database, we might be better having a single users collection, with a posts field in each user. See Diagram 04 for an illustration of how we would structure this.
 
@@ -613,7 +656,68 @@
     })
     ```
     In the above example, at each level we can have a populate property, which has a value of an objec with the path (*i.e.*, the property to expand), the model (*i.e.*, the model where this resides) and, if one wishes to go into the next level, a nested *populate* property. 
+
+
+
+## Selectors
+1. Similar to the WHERE clause of a SQL statement, Mongo uses a system of selectors to choose which records in a collection is is looking for. The selectors are made of key / value pairs, together with specified keys.
+
+2. Note that in the examples below, we will be using the **find()** method, but it could be any method that requires that we identify one or more records.
+
+### Basic query
+
+1. The basic query is a key / value pair. Note that the value can be a **regular expression**.
+    ```javascript
+    User.find({name: 'Jay'});
+    //or
+    User.find({name: /j\w+y/i});
+    //would find 'Jay', 'Joy', 'Jeremy'
+    ```
+
+2. To create an "and" combination, simply list multiple key-value pairs:
+    ```javascript
+    User.find({name: 'Jay', age: 51);
+    ```
+    Alternatively, there is an **$and** operator that will take an array of conditions and be satisfied only if each of the array items is true. For example:
+    ```javascript
+    User.find({ $and: [name: 'Jay', {age: {$gte: 50}}]});
+    ```
+3. To create an "or" condition in the sense of matching any of several alternatives in a single field, use an array of alternatives, with the **$in** keyword:
+    ```javascript
+    User.find({name: {$in:['Jay', 'Thompson']}});
+
+4. To create an "or" condition covering multiple fields, use the **$or** operator:
+    ```javascript
+    User.find({name: 'Jordan', $or: [{eyes: grey}, {age: 30}]});
+    ```
+    **NOTE**: The "$or" marker signals that a hit is made if any of the conditions in the array are true. So, the above query finds people who 1. are named "Jordan", and 2. either have grey eyes or are 30 years old.
+
+5.  If the value of a field is an array, a query will match if it matches any value of the array.  For example, if Jay's children: ['Jamie', 'Alec', 'Taylor']:
+    ```javascript
+    User.find({children: 'Alec'} //will return the record.
+    ```
+		
+### Operators
+1. Mongo also offers some operators to assist in searching. There are many of them, and a full listing would make this outline excessively long. A few examples are provided below, but much more information can be found on the MongoDB documentation website:
+
+    a. **$eq / $ne / $gt / $lt / $gte / $lte** (==, !=, >, <, >=, <=): These are used as keys, as in the following examples:
+    ```javascript
+    User.find({ age: { $gte: 25 } });
+    //finds all users who are greater than or equal to 25 years old
+    ```
     
+    b. **$exist: [boolean]**: This operator tests the presence or absence of a field on a record. For example:
+    ```javascript
+    User.find({ $and:[{ name: 'Jay' }, { eyes: { $exists: true } }] })
+    //finds a user whose name is "Jay" and who has an "eyes" property
+    ```
+
+    c. **$not**: This operator selects documents that do not match the subsequent expression, **including** documents that do not include the specified field.
+    ```javascript
+    User.find({ $and:[{ name: 'Jay' }, {eyes: {$not: { $eq: 'grey' }}}] })
+    ```
+
+
 
 ## THE END
 ::: danger
@@ -663,40 +767,6 @@ material below here is not reliable
 		> db.clients.remove(); //removes all client documents, but does not drop the collection 'clients'. 
 
 5. To get a count of the number of items that match, use **count**.
-
-####Selectors
-
-1. Similar to the WHERE clause of a SQL statement.  The basic query is a key:value pair.  Note that the values can be regular expressions.
-
-		> db.clients.find({name: 'Jay'});
-		or >db.clients.find({name: /j.+y/i}); //would find 'Jay', 'Joy'
-
-2. To create an "and" condition, simply list multiple key-value pairs:
-
-		>db.clients.find({name: 'Jay', age: 51);
-
-		
-3.  To create an "or" condition in the sense of matching any of several alternatives, simply use an array of alternatives, with the **$in** keyword:
-
-		>db.clients.find({name: {$in:['Jay', 'Thompson']}});
-		
-4. To create an "or" condition covering multiple fields, use the **$or** operator:
-
-		>db.clients.find({gender: 'f', $or: [{name: /^jay/i}, {eyes: 'blue'}]}) //finds a female client named Jayme, or a blue-eyed female client of any name.
-
-5.  If the value of a field is an array, a query will match if it matches any value of the array.  For example, if Jay's children: ['Jamie', 'Alec', 'Taylor']:
-
-		>db.clients.find({children: 'Alec'} //will return the record.
-		
-####Operators
-
-		$ne: not equal to
-		$lt: less than
-		$gt: greater than
-		$gte: greater than or equal to
-		$lte: less than or equal to
-		$exists: [boolean] //tests presence or absence of a field
-
 
 ####Updating
 
@@ -788,25 +858,6 @@ material below here is not reliable
 	
 		var userA = new User([parameters, often from req.body])
 
-5. The data types for the Schema are as follows:
-
-	a. String
-	b. Number
-	c. Date
-	d. Boolean
-	e. ObjectId: must specify as follows:
-	
-			var scheme = new Schema({
-				ID: Schema.Types.ObjectId,
-			})
-	f. Array: can either be a mixed array, or an array of a specified type.  Examples:
-	
-			var scheme = new Schema({
-				mixArr: [],
-				strArr: [String],
-				numArr: [Number], //etc.
-			})
-	
 			
 	g. Mixed: type must be passed in as follows:
 	
@@ -815,15 +866,7 @@ material below here is not reliable
 			})
 	h. Buffer
 
-6. **Default Values**: One can set default values in the Mongoose Schema.  Example:
 
-		var UserSchema = new Schema( {
-			. . . 
-			created: {
-				type: Date,
-				default: Date.now()
-			}
-		)
 7. **Modifiers**: This is a feature that allows one to change a field's value before saving the document to the database, or to represent it differently at query time.
 	a. Some modifiers are predefined and included with Mongoose, such as "trim," "lowercase," and "uppercase."  Example:
 	
