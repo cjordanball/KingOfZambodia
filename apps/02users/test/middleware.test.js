@@ -3,7 +3,7 @@ const assert = require('assert');
 const User = require('../src/user');
 const BlogPost = require('../src/blogPost');
 
-describe.only('Middleware', () => {
+describe('Middleware', () => {
 	let joe, blogPost;
 	beforeEach((done) => {
 		joe = new User({ name: 'Joe' });

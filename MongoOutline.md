@@ -468,10 +468,6 @@
 
 3. There are a variety of such *update operators*, and they are documented in the Mongo documentation, so do not assume we are limited to those discussed herein.
 
-### Other Collection Methods
-1. These are similar to opeerators, in that they provide added functionality. Below are some examples:
-
-    a. **collection.count(selector, options)**: Returns the number of documents that would match a find() query.
 
 ## Validation (Mongoose)
 1. Mongoose provides validations features, so that we can confirm that data is in a valid form before sending it off to the database. *Mongo* does have its own support for validation, but that is not covered in this section.
@@ -721,57 +717,30 @@
     User.find({ $and:[{ name: 'Jay' }, {eyes: {$not: { $eq: 'grey' }}}] })
     ```
 
-## Middleware
-1. **Example Problem**: Let's assume that we have a collection of Users, a collection of BlogPosts that belong to users, and a collection of Comments that belong to BlogPosts but to which belong Users. If we delete a User from the collection, we also want to remove each of that User's BlogPosts.
 
-2. To accomplish this, we are going to use **middleware**, which are **pre** and **post** hooks. *Pre* middleware is executed before the operation with which it is associated, whereas *post* middleware is executed after.
+### Using Skip and Limit
+1. If we are performing a *find()* query, we may get back many results, and may not wish to deal with all of them at once. We can get a selected slice of our returned results with the **skip()** and **limit()** modifiers. *Skip* lets us tell where in our returned list we wish to begin, and *limit* allows us to tell how many records we want to have returned.
 
-3. The middleware can go before (pre) or after (post) four mongoose events: *init*, *save* or *validate*, and *remove*. In the example discussed above, we could add a pre-middleware to remove associated posts right before a user is removed.
-
-4. The syntax is for the middleware to be added to the Schema, with two parameters: the name of the event, and a callback function. Again, as with the virtual properties, we want access to the model on "this", so we need to use a traditional function syntax instead of an arrow function.
-
-5. **A Trick**: In our pre-function on our UserSchema, we are going to want to access the blogpost model. However, there is a circularity problem, becuase the blogPost file requires in the User Model, so if our User file requires in the BlogPost model, there is a problem. We can avoid this by **not** requiring in the BlogPost model, but making it in our pre-function callback:
+2. This *skip()* and *limit()* methods are implemented by chaining them onto our queery. Each takes an integer as a parameter, so the following would be a possible query:
     ```javascript
-    UserSchema.pre('remove', function() {
-        const BlogPost = mongoose.model('blogPost');
-    });
+    User.find({}).skip(10).limit(5);
     ```
-6. **Important**: Don't forget that the *ClassNome.remove()* method takes a matcher object, and removes all matching records. So, we do not have to go over an array of records and remove each one by one, we simply use the **$in** matcher to identify all the items in the array, and remove them.
+    The above query would skip the first 10 results, then show 11 - 15.
 
-7. It is important that our middleware run in order, and normally what we will be doing in the middleware will involve asynchronous functions. In order to deal with this and prevent overrunning, we will pass in as a parameter to our callback a **next** argument, which will be executed when our middleware is finished, like **done()**. It tells the app to go to the next middleware (or the event if it is the last of the pre-middlewares).
+3. Note, however, that this presupposes that we know what order in which our results are going to return. If order matters, then we need add **sorting** to our query. 
+
+4. We can add a **sort()** method to modify our query. The syntax is to add the **sort()** modifier to the query, with a parameter of an object, the keys of which are the fields upon which to sort, and the values of which are a number: 1 if our sort is **ascending**, -1 if our sort is **descending**. So, our query might be as follows, to sort by lastname, and then by firstname:
     ```javascript
-    UserSchema.pre('remove', function(next) {
-        const BlogPost = mongoose.model('blogPost');
-
-        BlogPost.remove({ _id: { $in: this.blogPosts } })
-            .then(() => next());
-    });
+    User.find({}).sort({lastName: 1, firstName: 1 });
     ```
+
 
 ## THE END
 ::: danger
 material below here is not reliable
 :::
 
-#### Middleware
-1. Middleware in Mongoose can either be **pre** or **post**.    Compare the two examples:
 
-		 UserSchema.pre('save', function(next) {
-		 	if (. . .) {
-		 		next()
-		 	} else {
-		 		next(new Error ('An Error'));
-		 	}
-		 });
-		 
-		 UserSchema.post('save', function(next) {
-		 	if(this.isNew) {
-		 		console.log('New user!');
-		 	} else {
-		 		console.log('Update!');
-		 	}
-		 });
-		 
 
 
 
@@ -1011,3 +980,33 @@ material below here is not reliable
 			//Then, to use the authenticate method:
 			
 			user.authenticate('password');
+
+
+
+####Middleware
+1. Middleware in Mongoose can either be **pre** or **post**.  Pre middleware is executed before the operation with which it is associated, whereas post middleware is executed after.  Compare the two examples:
+
+		 UserSchema.pre('save', function(next) {
+		 	if (. . .) {
+		 		next()
+		 	} else {
+		 		next(new Error ('An Error'));
+		 	}
+		 });
+		 
+		 UserSchema.post('save', function(next) {
+		 	if(this.isNew) {
+		 		console.log('New user!');
+		 	} else {
+		 		console.log('Update!');
+		 	}
+		 });
+		 
+####DBRef
+1.  MongoDB does not support joins.  However, it does support the reference of a document to another document using the DBRef convention.  Mongoose supports DBRefs by the ObjectID schema type and the ref property.
+
+
+
+
+
+

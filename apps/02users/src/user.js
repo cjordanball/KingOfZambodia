@@ -8,7 +8,7 @@ const UserSchema = new Schema({
 	name: {
 		type: String,
 		required: [true, 'Name is required.'],
-		match: [/^jo\w*|sue$/i, 'Name must start with "jo" or be "sue"'],
+		// match: [/^jo\w*|sue$/i, 'Name must start with "jo" or be "sue"'],
 		validate: {
 			validator: (name) => name.length > 2,
 			message: 'Name must be longer than 2 chars.'
