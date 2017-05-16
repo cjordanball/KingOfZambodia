@@ -1,7 +1,7 @@
 const assert = require('assert');
 const User = require('../src/user');
 
-describe.only('Selectors', () => {
+xdescribe('Selectors', () => {
 	beforeEach((done) => {
 		joe = new User({
 			name: 'Joe',
