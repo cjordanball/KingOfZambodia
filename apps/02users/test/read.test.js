@@ -23,6 +23,15 @@ describe.only('Reading users out of database', () => {
 			.catch((err) => { console.error('Error: ', err)});
 	});
 
+	it.only('finds all users that end in "ia"', (done) => {
+		User.find({ name: /ia$/})
+			.then((users) => {
+				console.log('user', users);
+				assert(users[0].id.toString() === maria._id.toString());
+				done();
+			});
+	})
+
 	it('finds a user with a particular id', (done) => {
 		User.findOne({ _id: joe._id })
 			.then((user) => {

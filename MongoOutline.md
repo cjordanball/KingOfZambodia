@@ -390,7 +390,9 @@
 ### Fourth Test - Updating a User
 1. There are also several ways to update a document from a collection. Three exist as static methods for the Class, and two as an instance method for the document. Assuming we want to update "joe", which is an instance of User, we could have:
 
-    a. **User.update()**: Takes a matcher object, and removes all matching entries. In basic form it takes a selector object as a first parameter, and a  change object as the second parameter.
+    a. **User.update()**: Takes a matcher object, and updates **only the first** of the matching entries. In basic form it takes a selector object as a first parameter, and a  change object as the second parameter. However, there is an option (the third parameter is an options object) of "multi"; if set to true, then all the matching documents will be updated.
+    
+    b. **User.updateMany()**: Same as above, but performs the update for each matching record.
     
     b. **User.findOneAndUpdate()**: Takes a matcher object, and removes the first matching entry.
     
@@ -736,6 +738,48 @@
 5. Another use of these modifiers is to find extreme values in our data. For example, if we have a collection of people, and each person has an age field entry, we might want to know the age range of our collection. To get that, we do not have a simple **max** or **min** method in Mongo, but can collect all the Users, sort them by age, then get the first one; whetheer max or min depends on our sort direction. 
 
 6. **Important Note**: Remember, that until we hit the ".then" statement, everything is happening inside the database. So, the above approach is much better than finding all the records and then sorting them ourselves after the *find()* promise has been fulfilled. It could be thousands or millions of records, and there is no need to download all that, just to get the maximum or minimum.
+
+### Querying Based on Text Matching
+1. Imagine that we have a collection of persons with a single name field, so persons names will be entered as first and last, "Jordan Ball". We can easily do a query to match the input in the name field, but it will only match if we get the entire field correctly matched. For example, if the name field is "Jordan Ball", then "Jordan" or "Ball" or "jor" won't match.
+
+2. Remember, we can use **regular expressions** in our query to match on string fields.
+
+3. Alternatively, we can use MongoDB's **$text** search operator, which allows us to search strings for specific words. In some situations, this is good. It should be very fast, since it **can only search over an indexed field**. However, it only returns matches of complete words; *e.g.*, "Jordan" will give a match against "Jordan Ball", but "jor" will not match.
+
+4. An **index** is a system that the database uses to make very efficient search queries. All collections in MongoDB are indexed on the **\_id** property. 
+
+5. If we go into RoboMongo, we can see, for each collection, an "indexes" folder, which will always have an \_id index file.
+
+6. If we have a field that we want to be able to search very quickly, we can add an index for that field. For example, if user accounts are named by email address, then we can index the e-mail field, as we expect that we will always be searching based on email address.
+
+7. Currently, MongoDB only supports indexing a **single field**, besides the \_id field.
+
+8. Creating an index on a field is done from the command line, as follows:
+
+    a. first, connect to the mongo database server:
+    ```
+    mongo
+    ```
+    b. switch to the correct database:
+    ```
+    use [database name]
+    ```
+    c. create the index with the following command:
+    ```
+    db.[collection name].createIndex({ [fiedl name]: "[type of index]" })
+    ```
+    There are several types of indexes in MongoDB. Text indexes support search of string content in documents.
+
+
+## Seeding Testing Data
+1. In the **UpStar Music** app in the gitHub repo, look at the file "src/seeds.js." This file uses an npm module called "faker" to generate a whole bunch of randomized data to work with.
+
+2. It is not worth going over here, but see the api documentation and the setup in the *src/seeds.js* file to get started. One note: there are constants MIMINUM ARTISTS and ARTISTS_TO_ADD. The first tells faker the number of artist at which it must generate some new data. The second tells how many to generate once it gets to generating.
+
+
+
+
+
 
 ## THE END
 ::: danger
