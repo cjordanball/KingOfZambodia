@@ -733,7 +733,9 @@
     ```javascript
     User.find({}).sort({lastName: 1, firstName: 1 });
     ```
+5. Another use of these modifiers is to find extreme values in our data. For example, if we have a collection of people, and each person has an age field entry, we might want to know the age range of our collection. To get that, we do not have a simple **max** or **min** method in Mongo, but can collect all the Users, sort them by age, then get the first one; whetheer max or min depends on our sort direction. 
 
+6. **Important Note**: Remember, that until we hit the ".then" statement, everything is happening inside the database. So, the above approach is much better than finding all the records and then sorting them ourselves after the *find()* promise has been fulfilled. It could be thousands or millions of records, and there is no need to download all that, just to get the maximum or minimum.
 
 ## THE END
 ::: danger
