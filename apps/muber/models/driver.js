@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-mongoose.Promises = global.Promises;
 const Schema = mongoose.Schema;
 
 const DriverSchema = new Schema({
