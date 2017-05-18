@@ -30,7 +30,6 @@ describe('Drivers controller', () => {
 				.end(() => {
 					Driver.findById(id)
 						.then((val) => {
-							console.log(val.driving);
 							assert(val.driving === true);
 							done();
 						});
@@ -40,17 +39,37 @@ describe('Drivers controller', () => {
 	it('DELETE to /api/drivers/:id to delete an existing driver', (done) => {
 		const newDriver = new Driver({ email: 'test@testeroo.com', driving: false });
 		newDriver.save()
-			.then((driver) => {
-				const id = driver._id;
+			.then(() => {
 				request(app)
-				.delete(`/api/drivers/${id}`)
+				.delete(`/api/drivers/${newDriver._id}`)
 				.end(() => {
-					Driver.findById(id)
+					Driver.findById(newDriver._id)
 					.then((val) => {
 						assert(!val);
 						done();
 					});
 				});
 			});
+	});
+	it('GET to /api/drivers finds drivers in a location', (done) => {
+		const seattleDriver = new Driver({
+			email: 'seattle@test.com',
+			geometry: { type: 'Point', coordinates: [-122.475, 47.614] }
+		});
+		const miamiDriver = new Driver({
+			email: 'miami@test.com',
+			geometry: { type: 'Point', coordinates: [-80.253, 25.791] }
+		});
+		Promise.all([seattleDriver.save(), miamiDriver.save()])
+		.then(() => {
+			request(app)
+			.get('/api/drivers?lat=47.614&lng=-122.475')
+			.end((err, response) => {
+				const drivers = response.body;
+				assert(drivers.length === 1);
+				assert(drivers[0].obj.email === 'seattle@test.com');
+				done();
+			});
+		});
 	});
 });
