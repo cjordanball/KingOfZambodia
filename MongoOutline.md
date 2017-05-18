@@ -235,10 +235,12 @@
         });
     ```
     As we can see from the above, instances of the User class are more than just the key/value pairs we provide them; for example, we know there is, at the least, a **save()** instance method.
-    
-3. The above will save a user to our database collection. However, it will do so every time we call npm run test, so we will keep getting more and more "joes". We are going to want to empty our database after running tests, as we do not want to accumulate all this test data.
 
-4. To accomplish the task of clearing our database before any test is run, we can add a **hook**, a method that is called at a specific time in a cycle. In our *test_helper.js* file, we can add the **beforeEach()** method. We can run as follows:
+3. An alternative to the use of *new [Model]* and then *save()* is to use the **create()** method. This takes one or more property objects, or an array of property objects, and saves them to the database, returning a promise that resolves with the values saved.
+
+4. The above will save a user to our database collection. However, it will do so every time we call npm run test, so we will keep getting more and more "joes". We are going to want to empty our database after running tests, as we do not want to accumulate all this test data.
+
+5. To accomplish the task of clearing our database before any test is run, we can add a **hook**, a method that is called at a specific time in a cycle. In our *test_helper.js* file, we can add the **beforeEach()** method. We can run as follows:
     ```javascript
     beforeEach(() => {
         mongoose.connection.collections.users.drop();

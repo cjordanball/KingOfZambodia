@@ -7,7 +7,7 @@
         "react/jsx-indent": [2, 'tab'],
         "import/no-unresolved": [2, {"caseSensitive": false}],
         "import/no-extraneous-dependencies": ["error", {"devDependencies": true}],
-        "no-console": ["error", allow: ["log"]],
+        "no-console": ["error", allow: ["log", "warn"]],
         "react/jsx-indent-props": [2, 'tab'],
         "comma-dangle": ["error", "never"]
     },
