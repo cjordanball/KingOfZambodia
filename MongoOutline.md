@@ -772,13 +772,48 @@
     ```
     There are several types of indexes in MongoDB. Text indexes support search of string content in documents.
 
+## Working With Geolocation
+1. **First Thing First**: MongoDB records locations in ordered pairs of **[long, lat]**. This is reversed from most databases and APIs, but makes sense if you think of looking at a map with x, y coordinates.
+
+2. Mongo has support for two different mapping systems: **2d** and **2d Sphere**. In the former, it makes calculations based on points being on a plane surface. In the latter, it calculates based on the spherical shape of the earth.
+
+3. MongoDB uses a system called GeoJSON to represent geographical data. One can find out more about it at **geojson.org**.
+
+4. The following is a sample schema for a point location on a map:
+    ```javascript
+    const PointSchema = new Schema({
+        type: {
+            type: String,
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number],
+            index: '2dsphere',
+            required: true
+        }
+    });
+    ```
+    Note the *index* property in the coordinates, which designates which mapping system we are using.
+
+5. Once we have that data available, Mongoose makes available queries that can work with it. For example, **Model.geoNear** finds records within a given distance of a given point.
+
+6. For more info on the Model.geoNear() method, see the Mongoose documentation; however, note that its default distance unit is the meter, so a query may look like:
+    ```javascript
+    Driver.geoNear(
+        { type: 'Point', coordinates: [lng, lat] },
+        { spherical: true, maxDistance: 2000}
+    )
+    ```
+    The first parameter is the GeoJSON point, and the second parameter is an options object.
+
+
 
 ## Seeding Testing Data
-1. In the **UpStar Music** app in the gitHub repo, look at the file "src/seeds.js." This file uses an npm module called "faker" to generate a whole bunch of randomized data to work with.
+1. In the **UpStarMusic** app in the gitHub repo, look at the file "src/seeds.js." This file uses an npm module called "faker" to generate a whole bunch of randomized data to work with.
 
 2. It is not worth going over here, but see the api documentation and the setup in the *src/seeds.js* file to get started. One note: there are constants MIMINUM ARTISTS and ARTISTS_TO_ADD. The first tells faker the number of artist at which it must generate some new data. The second tells how many to generate once it gets to generating.
 
-
+ 
 
 
 
