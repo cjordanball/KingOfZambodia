@@ -30,7 +30,6 @@ describe('Drivers controller', () => {
 				.end(() => {
 					Driver.findById(id)
 						.then((val) => {
-							console.log(val.driving);
 							assert(val.driving === true);
 							done();
 						});
