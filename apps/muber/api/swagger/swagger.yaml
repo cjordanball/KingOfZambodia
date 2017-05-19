@@ -1,0 +1,126 @@
+swagger: "2.0"
+info:
+  description: "This is the attempt to wire up a node/express/mongo app"
+  version: "0.0.1"
+  title: "King of Zambodia"
+host: localhost:3000
+basePath: /
+schemes:
+  - "http"
+  - "https"
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /:
+    get:
+      x-swagger-router-controller: "drivers_controllers"
+      description: "A test endpoint to see if it works"
+      operationId: "howdy"
+      parameters: []
+      responses:
+        200:
+          description: "a simple message"
+          schema:
+            $ref: "#/definitions/greeting"
+  /drivers:
+    get:
+      x-swagger-router-controller: drivers_controllers
+      description: "An endpoint to get list of drivers nearby"
+      operationId: index
+      parameters:
+        - name: lng
+          in: query
+          description: 'the longitude of the point'
+          type: 'string'
+        - name: lat
+          in: query
+          description: 'the latitude of the point'
+          type: 'string'
+      responses:
+        200:
+          description: "Successful get"
+          schema:
+            $ref: "#/definitions/newDriver"
+    post:
+      x-swagger-router-controller: drivers_controllers
+      description: "An endpoint for adding drivers"
+      operationId: "create"
+      consumes:
+        - application/json
+      parameters:
+        - name: newDrivers
+          in: body
+          description: "a list of the drivers to be added"
+          schema:
+            properties:
+              sources:
+                type: array
+                items:
+                  $ref: '#/definitions/newDriver'
+      responses:
+        200:
+          description: "Todo updated"
+          schema:
+            $ref: "#/definitions/newDriver"
+  /drivers/{id}:
+    delete:
+      x-swagger-router-controller: drivers_controllers
+      description: "An endpoint to remove a driver based on his id"
+      operationId: remove
+      parameters:
+        - name: id
+          in: path
+          description: "the drivers database ID"
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Driver deleted"
+          schema:
+            $ref: "#/definitions/newDriver"
+    put:
+      x-swagger-router-controller: drivers_controllers
+      description: "An endpoint to modify a drivers information"
+      operationId: update
+      parameters:
+        - name: id
+          in: path
+          description: "the driver's databaseID"
+          required: true
+          type: string
+        - name: changeObject
+          in: body
+          description: "the drivers properties to update"
+          schema:
+            $ref: '#/definitions/newDriver'
+      responses:
+        200:
+          description: "Todo updated"
+          schema:
+            $ref: "#/definitions/newDriver"
+definitions:
+  greeting:
+    type: "object"
+    properties:
+      hi:
+        type: string
+        description: "a simple test string"
+  newDriver:
+    type: "object"
+    properties:
+      email:
+        type: "string"
+        description: "the email of the driver - primary means of id"
+      driving:
+        type: "boolean"
+        description: "true if driver is working; false if off the clock"
+        default: false
+      geometry:
+        type: "object"
+        properties:
+          coordinates:
+            type: "array"
+            items:
+              type: number

@@ -11,10 +11,12 @@
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.17.1",
+    "cors": "^2.8.3",
     "express": "^4.15.3",
     "mocha": "^3.4.1",
     "mongoose": "^4.9.9",
-    "supertest": "^3.0.0"
+    "supertest": "^3.0.0",
+    "swagger-express-mw": "^0.7.0"
   },
   "devDependencies": {
     "nodemon": "^1.11.0",
